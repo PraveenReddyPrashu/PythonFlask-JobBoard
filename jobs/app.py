@@ -1,6 +1,7 @@
-from flask import Flask
-from flask import render_template,g
+from flask import Flask,request,redirect
+from flask import render_template,g,url_for
 import sqlite3
+import datetime
 
 PATH = "db/jobs.sqlite"
 
@@ -35,6 +36,18 @@ def close_connection(exception):
     connection = getattr(g,'_connection',None)
     if connection != None:
         connection.close()
+
+app.route('/employer/<employer_id>/review',methods=('GET','POST'))
+def review(employer_id):
+    if request.method == 'POST':
+        review = request.form['review']
+        rating = request.form['rating']
+        title = request.form['title']
+        status = request.form['status']
+        date = datetime.datetime.now().strftime("%m/%d/%Y")
+        execute_sql('INSERT INTO review (review, rating, title, date, status, employer_id) VALUES (?, ?, ?, ?, ?, ?)',(review, rating, title, date, status, employer_id),commit=True)
+        return redirect(url_for('employer', employer_id=employer_id))
+    return render_template('review.html',employer_id=employer_id)
 
 @app.route('/job/<job_id>')
 def job(job_id):
